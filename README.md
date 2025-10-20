@@ -1,4 +1,3 @@
-Perfect timing 😎 — since you’re Dev A (RAG Handler) and this is **Phase 1 of DataDocAI**, let’s craft a professional, complete, *real-repo-ready* `README.md` that explains the **vision, setup, architecture, and roles** clearly.
 
 ---
 
