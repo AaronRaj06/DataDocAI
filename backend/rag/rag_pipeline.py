@@ -56,20 +56,68 @@ class RAGPipeline:
         Returns:
             Dictionary with processing status and document ID
         """
-        # TODO: Implement in Phase 2
-        # - Extract text from PDF/TXT files
-        # - Split text into chunks
-        # - Generate embeddings
-        # - Store in ChromaDB
+        try:
+            # Step 1: Process document (extract text and chunk)
+            process_result = self.document_processor.process(
+                file_path=file_path,
+                file_content=file_content,
+                metadata=metadata
+            )
+            
+            if process_result["status"] != "success":
+                return process_result
+            
+            # Step 2: Get chunks and metadata
+            chunks = process_result["chunks"]
+            chunk_metadata = process_result["metadata"]
+            document_id = process_result["document_id"]
+            
+            if not chunks:
+                return {
+                    "status": "error",
+                    "message": "No chunks created from document",
+                    "document_id": document_id,
+                    "chunks_created": 0
+                }
+            
+            # Step 3: Generate unique IDs for each chunk
+            chunk_ids = [f"{document_id}_chunk_{i}" for i in range(len(chunks))]
+            
+            # Step 4: Store in vector database (ChromaDB handles embeddings automatically)
+            store_result = self.vector_store.add_documents(
+                ids=chunk_ids,
+                documents=chunks,
+                metadatas=chunk_metadata
+            )
+            
+            if store_result["status"] != "success":
+                return {
+                    "status": "error",
+                    "message": f"Failed to store in vector database: {store_result.get('message')}",
+                    "document_id": document_id,
+                    "chunks_created": len(chunks)
+                }
+            
+            print(f"🎉 Document stored successfully: {len(chunks)} chunks in vector DB")
+            
+            return {
+                "status": "success",
+                "message": f"Document processed and stored successfully",
+                "document_id": document_id,
+                "chunks_created": len(chunks),
+                "total_characters": process_result.get("total_characters", 0),
+                "file_name": metadata.get("file_name") if metadata else file_path
+            }
+            
+        except Exception as e:
+            print(f"❌ Error in process_documents: {e}")
+            return {
+                "status": "error",
+                "message": f"Error processing document: {str(e)}",
+                "document_id": None,
+                "chunks_created": 0
+            }
         
-        print(f"📄 Processing document: {file_path}")
-        
-        return {
-            "status": "success",
-            "message": "Document processing placeholder - to be implemented in Phase 2",
-            "document_id": "placeholder_id",
-            "chunks_created": 0
-        }
 
     def get_answer(self, 
                    query: str, 
